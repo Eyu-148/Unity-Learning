@@ -5,12 +5,18 @@ using UnityEngine.SceneManagement;
 
 public class CollisionHandler : MonoBehaviour
 {
-    [SerializeField] float load_scene_delay = 1f;
+    [SerializeField] float delay_load_scene = 1f;
+    [SerializeField] AudioClip sound_crash;
+    [SerializeField] AudioClip sound_finish;
+
+    AudioSource audio_collision;
+
+    bool isTransitioning = false;
 
     // Start is called before the first frame update
     void Start()
     {
-        
+        audio_collision = GetComponent<AudioSource>();
     }
 
     // Update is called once per frame
@@ -20,21 +26,17 @@ public class CollisionHandler : MonoBehaviour
     }
 
     void OnCollisionEnter(Collision other) {
+        if (isTransitioning) {return;}
+
         switch (other.gameObject.tag) {
             default:
-                Debug.Log("uh-oh");
-                //ReloadLevel();
-                GetComponent<Movement>().enabled = false;
-                StartCoroutine(LoadingLevels(true)); // isCrashed = true
+                CrashSequence();
                 break;
             case "Friendly-Object":
                 Debug.Log("a friendly object!");
                 break;
             case "Finish":
-                Debug.Log("Finish point!");
-                //LoadNextLevel();
-                GetComponent<Movement>().enabled = false;
-                StartCoroutine(LoadingLevels(false)); // isCrashed = false
+                FinishSequence();
                 break;
             case "Fuel":
                 Debug.Log("a fuel point!");
@@ -42,31 +44,36 @@ public class CollisionHandler : MonoBehaviour
         }
     }
 
-    void ReloadLevel() {
-        // get the current build scene index
-        int current_scene_index = SceneManager.GetActiveScene().buildIndex;
-        SceneManager.LoadScene(current_scene_index);
+    void CrashSequence() {
+        isTransitioning = true;
+        audio_collision.Stop();
+        audio_collision.PlayOneShot(sound_crash);
+        GetComponent<Movement>().enabled = false;
+        StartCoroutine(LoadingLevels(true)); // isCrashed = true
     }
 
-    void LoadNextLevel() {
-        int current_scene_index = SceneManager.GetActiveScene().buildIndex;
-        SceneManager.LoadScene(current_scene_index + 1);
+    void FinishSequence() {
+        isTransitioning = true;
+        audio_collision.Stop();
+        audio_collision.PlayOneShot(sound_finish);                
+        GetComponent<Movement>().enabled = false;
+        StartCoroutine(LoadingLevels(false)); // isCrashed = false
     }
 
     IEnumerator LoadingLevels(bool isCrashed) {
         int current_scene_index = SceneManager.GetActiveScene().buildIndex;
         if (isCrashed) {
-            yield return new WaitForSeconds(load_scene_delay); // wait for 1s
+            yield return new WaitForSeconds(delay_load_scene); // wait for 1s
             SceneManager.LoadScene(current_scene_index); // reload the current scene
         }
         else {
             if (current_scene_index == SceneManager.sceneCountInBuildSettings - 1) {
                 // this level is the last level
-                yield return new WaitForSeconds(load_scene_delay);
+                yield return new WaitForSeconds(delay_load_scene);
                 SceneManager.LoadScene(0); // reinitialize the scene
             } 
             else {
-                yield return new WaitForSeconds(load_scene_delay);
+                yield return new WaitForSeconds(delay_load_scene);
                 SceneManager.LoadScene(current_scene_index + 1);
             }
         }
