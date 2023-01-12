@@ -4,12 +4,17 @@ using UnityEngine;
 
 public class Movement : MonoBehaviour
 {
-    [SerializeField] float default_thrust = 800f;
-    [SerializeField] float default_rotate = 100f;
+    [Header("Sound Effects")]
     [SerializeField] AudioClip audio_default_engine;
+
+    [Header("Particle Effects")]
+    [SerializeField] ParticleSystem particle_boost;
 
     Rigidbody rb_player;
     AudioSource as_boost;
+
+    [SerializeField] float default_thrust = 800f;
+    [SerializeField] float default_rotate = 100f;
 
     // Start is called before the first frame update
     void Start()
@@ -29,12 +34,14 @@ public class Movement : MonoBehaviour
         if (Input.GetKey(KeyCode.Space)) { //bosting
             rb_player.AddRelativeForce(Vector3.up * default_thrust * Time.deltaTime); // vector3.up = (0,1,0)
             if (!as_boost.isPlaying) {
-                as_boost.PlayOneShot(audio_default_engine);
+                as_boost.PlayOneShot(audio_default_engine); // play audio clip
             }
-        } else {
-            if (as_boost.isPlaying) {
-                as_boost.Pause();
+            if (!particle_boost.isPlaying) {
+                particle_boost.Play(); // play particle effect
             }
+        } else { // stop audio/particle
+            as_boost.Pause();
+            particle_boost.Stop();
         }
     }
 
