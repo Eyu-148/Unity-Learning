@@ -28,6 +28,10 @@ public class Movement : MonoBehaviour
     {
         ProcessThrust();
         ProcessRotation();
+        if (Input.GetKeyDown(KeyCode.Escape)) {
+            Application.Quit();
+            Debug.Log("quit the game");
+        }
     }
 
     void ProcessThrust() {
